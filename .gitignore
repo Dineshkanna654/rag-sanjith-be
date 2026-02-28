@@ -5,3 +5,10 @@ __pycache__/
 .venv/
 *.egg-info/
 .pytest_cache/
+dist/
+*.egg
+.mypy_cache/
+*.log
+.DS_Store
+uploads/
+tmp/
