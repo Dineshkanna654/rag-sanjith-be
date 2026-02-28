@@ -1,0 +1,26 @@
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaEmbeddings
+from langchain_core.documents import Document
+from app.config import settings
+
+
+def _get_vectorstore() -> Chroma:
+    embeddings = OllamaEmbeddings(
+        base_url=settings.OLLAMA_BASE_URL,
+        model=settings.EMBEDDING_MODEL,
+    )
+    return Chroma(
+        collection_name="rag_documents",
+        embedding_function=embeddings,
+        persist_directory=settings.CHROMA_PERSIST_DIR,
+    )
+
+
+def add_documents(docs: list[Document]) -> None:
+    vs = _get_vectorstore()
+    vs.add_documents(docs)
+
+
+def similarity_search(query: str, k: int = 5) -> list[Document]:
+    vs = _get_vectorstore()
+    return vs.similarity_search(query, k=k)
