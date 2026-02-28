@@ -1,9 +1,12 @@
+import logging
 import tempfile
 from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.services.document_loader import load_and_split_file
 from app.services.vectorstore import add_documents
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -22,6 +25,7 @@ async def ingest_document(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.exception("Ingestion failed for %s", file.filename)
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
     finally:
         tmp_path.unlink(missing_ok=True)
