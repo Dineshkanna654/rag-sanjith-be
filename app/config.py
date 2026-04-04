@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "nomic-embed-text"
     CHROMA_PERSIST_DIR: str = "./chroma_db"
     DATABASE_URL: str = "postgresql+asyncpg://sanjithkrishnab@localhost:5432/enterprise_rag"
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_EXPIRY_HOURS: int = 24
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

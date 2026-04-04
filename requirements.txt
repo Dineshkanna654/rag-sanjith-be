@@ -17,3 +17,4 @@ asyncpg==0.30.0
 alembic==1.15.2
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+PyJWT>=2.9.0

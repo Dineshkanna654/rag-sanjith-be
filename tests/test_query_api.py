@@ -1,9 +1,30 @@
 import json
-from unittest.mock import patch
+import uuid
+from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
+
+from app.api.deps import CurrentUser, get_current_user
 from app.main import app
 
-client = TestClient(app)
+FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=uuid.uuid4())
+
+
+def _client_with_auth():
+    app.dependency_overrides[get_current_user] = lambda: FAKE_USER
+
+    mock_conn = AsyncMock()
+    mock_conn.run_sync = AsyncMock()
+    mock_engine_connect = AsyncMock()
+    mock_engine_connect.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_engine_connect.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("app.main.engine") as mock_engine:
+        mock_engine.begin.return_value = mock_engine_connect
+        client = TestClient(app)
+        yield client
+
+    app.dependency_overrides.clear()
 
 
 def test_query_streams_json_events():
@@ -11,6 +32,9 @@ def test_query_streams_json_events():
 
     def mock_stream(question):
         return mock_sources, iter(["Hello", " world"])
+
+    gen = _client_with_auth()
+    client = next(gen)
 
     with patch("app.api.query.stream_rag_response", side_effect=mock_stream):
         response = client.get("/query?q=test+question")
@@ -35,7 +59,20 @@ def test_query_streams_json_events():
     # DONE sentinel
     assert events[-1] == "[DONE]"
 
+    try:
+        next(gen)
+    except StopIteration:
+        pass
+
 
 def test_query_missing_param_returns_422():
+    gen = _client_with_auth()
+    client = next(gen)
+
     response = client.get("/query")
     assert response.status_code == 422
+
+    try:
+        next(gen)
+    except StopIteration:
+        pass

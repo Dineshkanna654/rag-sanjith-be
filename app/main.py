@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.ingest import router as ingest_router
+from app.api.knowledge_base import router as kb_router
 from app.api.login import router as login_router
 from app.api.query import router as query_router
 from app.db.engine import engine
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(login_router)
 app.include_router(ingest_router)
 app.include_router(query_router)
+app.include_router(kb_router)
 
 
 @app.get("/health")

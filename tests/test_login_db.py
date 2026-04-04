@@ -11,6 +11,7 @@ def _make_user(username="admin", password="admin123", is_active=True):
     user.password_hash = bcrypt.hash(password)
     user.is_active = is_active
     user.id = uuid.uuid4()
+    user.org_id = uuid.uuid4()
     return user
 
 
@@ -60,7 +61,8 @@ class TestLoginDB:
 
         assert resp.status_code == 200
         data = resp.json()
-        assert data["success"] is True
+        assert "access_token" in data
+        assert data["token_type"] == "bearer"
         assert data["username"] == "admin"
 
         # cleanup
