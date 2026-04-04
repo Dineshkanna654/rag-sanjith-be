@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from app.api.admin import router as admin_router
+from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
 from app.api.knowledge_base import router as kb_router
 from app.api.login import router as login_router
@@ -49,6 +50,7 @@ app.add_middleware(
 app.include_router(login_router)
 app.include_router(ingest_router)
 app.include_router(query_router)
+app.include_router(health_router)
 app.include_router(kb_router)
 app.include_router(admin_router)
 

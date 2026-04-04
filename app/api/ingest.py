@@ -35,7 +35,6 @@ async def ingest_document(
 
     try:
         chunks = load_and_split_file(tmp_path, file.filename)
-        add_documents(chunks)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -44,8 +43,7 @@ async def ingest_document(
     finally:
         tmp_path.unlink(missing_ok=True)
 
-    response = {"message": f"Ingested {len(chunks)} chunks from {file.filename}"}
-
+    # Resolve KB first so we can inject kb_id into chunk metadata
     if kb_id:
         result = await db.execute(
             select(KnowledgeBase).where(KnowledgeBase.id == uuid.UUID(kb_id))
@@ -54,7 +52,6 @@ async def ingest_document(
         if kb is None:
             raise HTTPException(status_code=404, detail="Knowledge base not found")
     else:
-        # Auto-create or reuse a default knowledge base scoped to user's org
         result = await db.execute(
             select(KnowledgeBase).where(
                 KnowledgeBase.name == "Default",
@@ -72,7 +69,21 @@ async def ingest_document(
             db.add(kb)
             await db.flush()
 
+    # Generate a document ID upfront and inject tracking metadata into each chunk
+    doc_id = uuid.uuid4()
+    for chunk in chunks:
+        chunk.metadata["document_id"] = str(doc_id)
+        chunk.metadata["kb_id"] = str(kb.id)
+        chunk.metadata["filename"] = file.filename
+
+    try:
+        add_documents(chunks)
+    except Exception as e:
+        logger.exception("ChromaDB ingestion failed for %s", file.filename)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
+
     doc = Document(
+        id=doc_id,
         filename=file.filename,
         file_type=suffix,
         chunk_count=len(chunks),
@@ -83,7 +94,9 @@ async def ingest_document(
     kb.document_count = (kb.document_count or 0) + 1
     await db.commit()
     await db.refresh(doc)
-    response["document_id"] = str(doc.id)
-    response["kb_id"] = str(kb.id)
 
-    return response
+    return {
+        "message": f"Ingested {len(chunks)} chunks from {file.filename}",
+        "document_id": str(doc.id),
+        "kb_id": str(kb.id),
+    }

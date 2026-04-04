@@ -29,3 +29,19 @@ def similarity_search(query: str, k: int = 5) -> list[Document]:
 def similarity_search_with_scores(query: str, k: int = 5) -> list[tuple[Document, float]]:
     vs = _get_vectorstore()
     return vs.similarity_search_with_relevance_scores(query, k=k)
+
+
+def get_collection_count() -> int:
+    vs = _get_vectorstore()
+    return vs._collection.count()
+
+
+def get_all_chunk_metadata() -> list[dict]:
+    vs = _get_vectorstore()
+    result = vs._collection.get(include=["metadatas"])
+    return result["metadatas"] or []
+
+
+def delete_chunks_by_filter(where: dict) -> None:
+    vs = _get_vectorstore()
+    vs._collection.delete(where=where)
