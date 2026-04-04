@@ -9,7 +9,7 @@ from app.main import app
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
-FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=uuid.uuid4())
+FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=uuid.uuid4(), roles=["admin"])
 
 
 def _mock_session_with_kb(kb=None):

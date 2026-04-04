@@ -1,6 +1,7 @@
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
+from typing import Callable
 
 import jwt
 from fastapi import Depends, HTTPException
@@ -15,12 +16,13 @@ from app.db.models import User
 _bearer = HTTPBearer()
 
 
-def create_access_token(user_id: uuid.UUID, username: str, org_id: uuid.UUID | None) -> str:
+def create_access_token(user_id: uuid.UUID, username: str, org_id: uuid.UUID | None, roles: list[str]) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
         "username": username,
         "org_id": str(org_id) if org_id else None,
+        "roles": roles,
         "iat": now,
         "exp": now + timedelta(hours=settings.JWT_EXPIRY_HOURS),
     }
@@ -32,6 +34,7 @@ class CurrentUser:
     id: uuid.UUID
     username: str
     org_id: uuid.UUID | None
+    roles: list[str] = field(default_factory=list)
 
 
 async def get_current_user(
@@ -57,8 +60,23 @@ async def get_current_user(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
 
+    role_names = [r.name for r in user.roles]
+
     return CurrentUser(
         id=user.id,
         username=user.username,
         org_id=user.org_id,
+        roles=role_names,
     )
+
+
+def require_role(*allowed: str) -> Callable:
+    """Dependency factory: raises 403 if user lacks all of the allowed roles."""
+    async def _check(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+        if not any(r in allowed for r in current_user.roles):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Requires one of: {', '.join(allowed)}",
+            )
+        return current_user
+    return _check

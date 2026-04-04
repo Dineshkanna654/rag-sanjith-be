@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.api.deps import CurrentUser, get_current_user
 from app.main import app
 
-FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=uuid.uuid4())
+FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=uuid.uuid4(), roles=["viewer"])
 
 
 def _client_with_auth():

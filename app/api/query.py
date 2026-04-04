@@ -11,8 +11,9 @@ router = APIRouter()
 
 def _event_generator(question: str):
     try:
-        sources, tokens = stream_rag_response(question)
+        sources, trust_score, tokens = stream_rag_response(question)
         yield f"data: {json.dumps({'type': 'sources', 'data': sources})}\n\n"
+        yield f"data: {json.dumps({'type': 'trust_score', 'data': trust_score})}\n\n"
         for token in tokens:
             yield f"data: {json.dumps({'type': 'token', 'data': token})}\n\n"
         yield "data: [DONE]\n\n"

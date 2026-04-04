@@ -27,5 +27,11 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
 
-    token = create_access_token(user.id, user.username, user.org_id)
-    return {"access_token": token, "token_type": "bearer", "username": user.username}
+    role_names = [r.name for r in user.roles]
+    token = create_access_token(user.id, user.username, user.org_id, role_names)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "username": user.username,
+        "roles": role_names,
+    }

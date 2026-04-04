@@ -5,13 +5,19 @@ from fastapi.testclient import TestClient
 from passlib.hash import bcrypt
 
 
-def _make_user(username="admin", password="admin123", is_active=True):
+def _make_user(username="admin", password="admin123", is_active=True, roles=None):
     user = MagicMock()
     user.username = username
     user.password_hash = bcrypt.hash(password)
     user.is_active = is_active
     user.id = uuid.uuid4()
     user.org_id = uuid.uuid4()
+    mock_roles = []
+    for name in (roles or ["admin"]):
+        r = MagicMock()
+        r.name = name
+        mock_roles.append(r)
+    user.roles = mock_roles
     return user
 
 
@@ -64,6 +70,7 @@ class TestLoginDB:
         assert "access_token" in data
         assert data["token_type"] == "bearer"
         assert data["username"] == "admin"
+        assert data["roles"] == ["admin"]
 
         # cleanup
         try:

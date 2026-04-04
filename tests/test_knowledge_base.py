@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from app.api.deps import CurrentUser, get_current_user
 
 FAKE_ORG_ID = uuid.uuid4()
-FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=FAKE_ORG_ID)
+FAKE_USER = CurrentUser(id=uuid.uuid4(), username="testuser", org_id=FAKE_ORG_ID, roles=["admin"])
 
 
 def _mock_kb(name="Test KB", org_id=None, doc_count=0):

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, get_current_user
+from app.api.deps import CurrentUser, require_role
 from app.db.engine import get_db
 from app.db.models import Document, KnowledgeBase
 from app.services.document_loader import load_and_split_file
@@ -17,13 +17,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+_editor_dep = require_role("admin", "editor")
+
 
 @router.post("/ingest")
 async def ingest_document(
     file: UploadFile = File(...),
     kb_id: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(_editor_dep),
 ):
     suffix = Path(file.filename).suffix.lower()
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
