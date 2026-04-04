@@ -24,3 +24,8 @@ def add_documents(docs: list[Document]) -> None:
 def similarity_search(query: str, k: int = 5) -> list[Document]:
     vs = _get_vectorstore()
     return vs.similarity_search(query, k=k)
+
+
+def similarity_search_with_scores(query: str, k: int = 5) -> list[tuple[Document, float]]:
+    vs = _get_vectorstore()
+    return vs.similarity_search_with_relevance_scores(query, k=k)

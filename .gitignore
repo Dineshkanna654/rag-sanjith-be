@@ -15,3 +15,5 @@ uploads/
 tmp/
 .worktrees/
 package-lock.json
+alembic/
+alembic.ini

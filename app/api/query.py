@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 
@@ -8,11 +10,13 @@ router = APIRouter()
 
 def _event_generator(question: str):
     try:
-        for token in stream_rag_response(question):
-            yield f"data: {token}\n\n"
+        sources, tokens = stream_rag_response(question)
+        yield f"data: {json.dumps({'type': 'sources', 'data': sources})}\n\n"
+        for token in tokens:
+            yield f"data: {json.dumps({'type': 'token', 'data': token})}\n\n"
         yield "data: [DONE]\n\n"
     except Exception as e:
-        yield f"data: [ERROR] {e}\n\n"
+        yield f"data: {json.dumps({'type': 'error', 'data': str(e)})}\n\n"
 
 
 @router.get("/query")

@@ -12,3 +12,8 @@ docx2txt==0.9
 sse-starlette==2.3.4
 pydantic-settings==2.8.1
 python-dotenv==1.1.0
+sqlalchemy[asyncio]==2.0.41
+asyncpg==0.30.0
+alembic==1.15.2
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
